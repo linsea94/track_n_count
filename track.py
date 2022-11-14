@@ -37,23 +37,26 @@ from strong_sort.utils.parser import get_config
 from strong_sort.strong_sort import StrongSORT
 
 #setting line
+frame_cnt = 0
 count1 = 0
 count2 = 0
 data = []
+fps = 30
+lim_sec = 20
 #roi
-p1 = (400, 800)     # left  upper
+p1 = (0, 800)     # left  upper
 p2 = (1440, 800)    # right upper
-p3 = (1440, 1080)    # right lower
-p4 = (400, 1080)     # left  lower
-p21 = (400, 500)     # left  upper
-p22 = (1440, 500)    # right upper
-p23 = (1440, 780)    # right lower
-p24 = (400, 780)
+p3 = (1440, 900)    # right lower
+p4 = (0, 900)     # left  lower
+# p21 = (400, 500)     # left  upper
+# p22 = (1440, 500)    # right upper
+# p23 = (1440, 780)    # right lower
+# p24 = (400, 780)
 roi1 = (p1, p2, p3, p4)
-roi2 = (p21, p22, p23, p24)
+# roi2 = (p21, p22, p23, p24)
 
-def count_obj(box, id, roi, count):
-    global count1, count2, data
+def count_obj(box, id, roi, frame_cnt):
+    global count1, count2, data, fps, lim_sec
     center_pt = (int(box[0]+(box[2]-box[0])/2) , int(box[1]+(box[3]-box[1])/2))
     x = center_pt[0]
     y = center_pt[1]
@@ -65,7 +68,7 @@ def count_obj(box, id, roi, count):
     if x >= xmin and x <= xmax:
         if y >= ymin and y <= ymax:
             if  id not in data:
-                if count ==1:
+                if (frame_cnt / fps) < lim_sec:
                     count1 += 1
                     data.append(id)
                 else:
@@ -108,7 +111,7 @@ def run(
         dnn=False,  # use OpenCV DNN for ONNX inference
         eval=False,  # run multi-gpu eval
 ):
-    global count
+    global frame_cnt, count1, count2, fps
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (VID_FORMATS)
@@ -220,6 +223,7 @@ def run(
                     txt_file_name = p.parent.name  # get folder name containing current img
                     save_path = str(save_dir / p.parent.name)  # im.jpg, vid.mp4, ...
             curr_frames[i] = im0
+            frame_cnt += 1
 
             txt_path = str(save_dir / 'tracks' / txt_file_name)  # im.txt
             s += '%gx%g \n' % im.shape[2:]  # print string
@@ -258,8 +262,9 @@ def run(
                         cls = output[5]
 
                         #count
-                        count_obj(bboxes, id, roi1, 1)
-                        count_obj(bboxes, id, roi2, 2)
+                        count_obj(bboxes, id, roi1, frame_cnt)
+                        
+                        # count_obj(bboxes, id, roi2, 2)
                         
                         if save_txt:
                             # to MOT format
@@ -283,9 +288,10 @@ def run(
                                 save_one_box(bboxes, imc, file=save_dir / 'crops' / txt_file_name / names[c] / f'{id}' / f'{p.stem}.jpg', BGR=True)
 
                 # LOGGER.info(f'{s}Done. YOLO:({t3 - t2:.3f}s), StrongSORT:({t5 - t4:.3f}s)')
-                s += f"{count1}{' count1'}, "
-                s += f"{count2}{' count2'}, "
-                LOGGER.info(f'{s}\nDone. YOLO:({t3 - t2:.3f}s), StrongSORT:({t5 - t4:.3f}s)\n\n')
+                sec = np.round(frame_cnt / fps, 2)
+                LOGGER.info(f'{s}\nN-S way count :{count1}, E-W way count : {count2}, ')
+                LOGGER.info(f'Frame: {frame_cnt} Time: {sec} sec been finished.')
+                LOGGER.info(f'YOLO:({t3 - t2:.3f}s), StrongSORT:({t5 - t4:.3f}s)\n\n')
 
             else:
                 strongsort_list[i].increment_ages()
@@ -300,16 +306,17 @@ def run(
                 cv2.line(im0, p3, p4, color=(255, 255, 0), thickness = 2)
                 cv2.line(im0, p1, p4, color=(255, 255, 0), thickness = 2)
 
-                cv2.line(im0, p21, p22, color=(255, 120, 0), thickness = 2)
-                cv2.line(im0, p22, p23, color=(255, 120, 0), thickness = 2)
-                cv2.line(im0, p23, p24, color=(255, 120, 0), thickness = 2)
-                cv2.line(im0, p21, p24, color=(255, 120, 0), thickness = 2)
+                # cv2.line(im0, p21, p22, color=(255, 120, 0), thickness = 2)
+                # cv2.line(im0, p22, p23, color=(255, 120, 0), thickness = 2)
+                # cv2.line(im0, p23, p24, color=(255, 120, 0), thickness = 2)
+                # cv2.line(im0, p21, p24, color=(255, 120, 0), thickness = 2)
                 
                 # cv2.putText(img, text, org, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
                 img_info = ' h:' + str(h) + 'w:' + str(w)
                 cv2.putText(im0, img_info, (10, h-100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                cv2.putText(im0, 'counts 1:'+str(count1), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 2, cv2.LINE_AA)
-                cv2.putText(im0, 'counts 2:'+str(count2), (800,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 2, cv2.LINE_AA)
+                cv2.putText(im0, 'N-S counts :'+str(count1), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 2, cv2.LINE_AA)
+                cv2.putText(im0, 'E-W counts :'+str(count2), (800,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 2, cv2.LINE_AA)
+                cv2.putText(im0, ' time :'+str(sec), (10,h-150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
                 cv2.imshow(str(p), im0)
                 cv2.waitKey(1)  # 1 millisecond
 
