@@ -41,7 +41,7 @@ frame_cnt = 0
 count1 = 0
 count2 = 0
 data = []
-fps = 30
+fps = 24
 lim_sec = 30 # time split
 #roi
 p1 = (0, 450)     # left  upper
@@ -314,6 +314,8 @@ def run(
                 # cv2.putText(img, text, org, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
                 img_info = ' h:' + str(h) + 'w:' + str(w)
                 sec = np.round(frame_cnt / fps, 2)
+                cnt1 = count1
+                cnt2 = count2
                 cv2.putText(im0, img_info, (10, h-100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
                 cv2.putText(im0, 'N-S counts :'+str(count1), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
                 cv2.putText(im0, 'E-W counts :'+str(count2), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
