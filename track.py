@@ -42,12 +42,12 @@ count1 = 0
 count2 = 0
 data = []
 fps = 30
-lim_sec = 20
+lim_sec = 30 # time split
 #roi
-p1 = (0, 800)     # left  upper
-p2 = (1440, 800)    # right upper
-p3 = (1440, 900)    # right lower
-p4 = (0, 900)     # left  lower
+p1 = (0, 450)     # left  upper
+p2 = (960, 450)    # right upper
+p3 = (960, 500)    # right lower
+p4 = (0, 500)     # left  lower
 # p21 = (400, 500)     # left  upper
 # p22 = (1440, 500)    # right upper
 # p23 = (1440, 780)    # right lower
@@ -313,10 +313,11 @@ def run(
                 
                 # cv2.putText(img, text, org, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
                 img_info = ' h:' + str(h) + 'w:' + str(w)
+                sec = np.round(frame_cnt / fps, 2)
                 cv2.putText(im0, img_info, (10, h-100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                cv2.putText(im0, 'N-S counts :'+str(count1), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 2, cv2.LINE_AA)
-                cv2.putText(im0, 'E-W counts :'+str(count2), (800,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 2, cv2.LINE_AA)
-                cv2.putText(im0, ' time :'+str(sec), (10,h-150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                cv2.putText(im0, 'N-S counts :'+str(count1), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                cv2.putText(im0, 'E-W counts :'+str(count2), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                cv2.putText(im0, ' time :'+ str(sec), (10,h-150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
                 cv2.imshow(str(p), im0)
                 cv2.waitKey(1)  # 1 millisecond
 
