@@ -46,14 +46,20 @@ lim_sec = 30 # time split
 #roi
 p1 = (0, 450)     # left  upper
 p2 = (960, 450)    # right upper
-p3 = (960, 500)    # right lower
-p4 = (0, 500)     # left  lower
+p3 = (960, 499)    # right lower
+p4 = (0, 499)     # left  lower
+#clear data part
+del_p1 = (0, 500) 
+del_p2 = (960, 500)
+del_p3 = (960, 540)
+del_p4 = (0, 540)
 # p21 = (400, 500)     # left  upper
 # p22 = (1440, 500)    # right upper
 # p23 = (1440, 780)    # right lower
 # p24 = (400, 780)
-roi1 = (p1, p2, p3, p4)
 # roi2 = (p21, p22, p23, p24)
+roi1 = (p1, p2, p3, p4)
+del_area = (del_p1, del_p2, del_p3, del_p4)
 
 def count_obj(box, id, roi, frame_cnt):
     global count1, count2, data, fps, lim_sec
@@ -64,16 +70,28 @@ def count_obj(box, id, roi, frame_cnt):
     xmax = roi[2][0]
     ymin = roi[0][1]
     ymax = roi[2][1]
+    del_xmin = del_area[0][0]
+    del_xmax = del_area[2][0]
+    del_ymin = del_area[0][1]
+    del_ymax = del_area[2][1]
+    current_time = frame_cnt / fps
 
+    #add count
     if x >= xmin and x <= xmax:
         if y >= ymin and y <= ymax:
             if  id not in data:
-                if (frame_cnt / fps) < lim_sec:
+                if current_time < lim_sec:
                     count1 += 1
                     data.append(id)
                 else:
                     count2 += 1
                     data.append(id)
+
+    # delete id in data
+    if x >= del_xmin and x <= del_xmax:
+        if y >= del_ymin and y <= del_ymax:
+            if  id in data:
+                data.remove(id)
 
 # remove duplicated stream handler to avoid duplicated logging
 logging.getLogger().removeHandler(logging.getLogger().handlers[0])
@@ -263,7 +281,6 @@ def run(
 
                         #count
                         count_obj(bboxes, id, roi1, frame_cnt)
-                        
                         # count_obj(bboxes, id, roi2, 2)
                         
                         if save_txt:
